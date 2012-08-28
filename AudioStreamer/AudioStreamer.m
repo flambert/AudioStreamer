@@ -1012,7 +1012,7 @@ void ASReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType eventType,
     }
 
     /* if AAC or SBR needs to be supported, fix this */
-    /*case kAudioFileStreamProperty_FormatList: {
+    case kAudioFileStreamProperty_FormatList: {
       Boolean outWriteable;
       UInt32 formatListSize;
       err = AudioFileStreamGetPropertyInfo(inAudioFileStream,
@@ -1030,14 +1030,26 @@ void ASReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType eventType,
            i += sizeof(AudioFormatListItem)) {
         AudioStreamBasicDescription pasbd = formatList[i].mASBD;
 
-        if (pasbd.mFormatID == kAudioFormatMPEG4AAC_HE)
-        {
+        if(pasbd.mFormatID == kAudioFormatMPEG4AAC_HE_V2 && kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_4_0) {
+          // We found HE-AAC v2 (SBR+PS), but before trying to play it
+          // we need to make sure that both the hardware and software are
+          // capable of doing so...
+#if !TARGET_IPHONE_SIMULATOR
+          asbd = pasbd;
+#endif
+          break;
+        } else if (pasbd.mFormatID == kAudioFormatMPEG4AAC_HE) {
+          // We've found HE-AAC, remember this to tell the audio queue
+          // when we construct it.
+#if !TARGET_IPHONE_SIMULATOR
+          asbd = pasbd;
+#endif
           break;
         }
       }
       free(formatList);
       break;
-    }*/
+    }
   }
 }
 
