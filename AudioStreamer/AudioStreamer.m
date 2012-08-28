@@ -641,15 +641,15 @@ void ASReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType eventType,
 
   /* handle SSL connections */
   if ([[url absoluteString] rangeOfString:@"https"].location == 0) {
-    NSDictionary *sslSettings = @{
-      (id)kCFStreamSSLLevel: (NSString*)kCFStreamSocketSecurityLevelNegotiatedSSL,
-      (id)kCFStreamSSLAllowsExpiredCertificates:  @NO,
-      (id)kCFStreamSSLAllowsExpiredRoots:         @NO,
-      (id)kCFStreamSSLAllowsAnyRoot:              @NO,
-      (id)kCFStreamSSLValidatesCertificateChain:  @YES,
-      (id)kCFStreamSSLPeerName:                   [NSNull null]
-    };
-
+      NSDictionary *sslSettings =
+    [NSDictionary dictionaryWithObjectsAndKeys:
+     (NSString*)kCFStreamSocketSecurityLevelNegotiatedSSL, kCFStreamSSLLevel,
+     [NSNumber numberWithBool:NO], kCFStreamSSLAllowsExpiredCertificates,
+     [NSNumber numberWithBool:NO], kCFStreamSSLAllowsExpiredRoots,
+     [NSNumber numberWithBool:NO], kCFStreamSSLAllowsAnyRoot,
+     [NSNumber numberWithBool:YES], kCFStreamSSLValidatesCertificateChain,
+     [NSNull null], kCFStreamSSLPeerName,
+     nil];
     CFReadStreamSetProperty(stream, kCFStreamPropertySSLSettings,
                             (__bridge CFDictionaryRef) sslSettings);
   }
@@ -738,7 +738,7 @@ void ASReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType eventType,
     // we only have a subset of the total bytes.
     //
     if (seekByteOffset == 0) {
-      fileLength = [httpHeaders[@"Content-Length"] integerValue];
+      fileLength = [[httpHeaders objectForKey:@"Content-Length"] integerValue];
     }
   }
 
@@ -746,7 +746,7 @@ void ASReadStreamCallBack(CFReadStreamRef aStream, CFStreamEventType eventType,
   if (!audioFileStream) {
     /* If a file type wasn't specified, we have to guess */
     if (fileType == 0) {
-      fileType = [AudioStreamer hintForMIMEType: httpHeaders[@"Content-Type"]];
+      fileType = [AudioStreamer hintForMIMEType: [httpHeaders  objectForKey:@"Content-Type"]];
       if (fileType == 0) {
         fileType = [AudioStreamer hintForFileExtension:
                       [[url path] pathExtension]];
